@@ -5,4 +5,4 @@ target_include_directories(solarSystemSimulator PUBLIC ../include)
 find_package(Eigen3 3.4 REQUIRED)
 find_package(OpenMP REQUIRED)
 
-target_link_libraries(solarSystemSimulator PUBLIC Eigen3::Eigen OpenMP::OpenMP_CXX nbody_lib)
+target_link_libraries(solarSystemSimulator PUBLIC Eigen3::Eigen OpenMP::OpenMP_CXX particle_lib manyBody_lib)
