@@ -13,33 +13,13 @@ double getDistance(Particle *p1, Particle *p2)
 Eigen::Vector3d calcAcceleration(Particle *p1, Particle *p2, double epsilon)
 {
     double d = getDistance(p1, p2);
-    if (d < 0.01)
-    {
-        epsilon = 0.1;
-    }
     Eigen::Vector3d accelerationOnP1 = (p2->getMass() * (p2->getPosition() - p1->getPosition())) / ( sqrt((d * d + epsilon * epsilon) * (d * d + epsilon * epsilon) * (d * d + epsilon * epsilon)) );
     return accelerationOnP1;
 }
 
-/* Calculate the total acceleration on a particle. The particle excludes itself from the calculation through a check that involves the mass and the distance with a particle (i.e. if two particles have the
-same mass and are really close in terms of distance, then the program treat them as the same particle). */
+/* solarSystemGenerator for the solar system with the sun and 8 planets */
 
-void Particle::calcTotalAcceleration(std::vector<Particle> particlesInTheSystem)
-{
-    Eigen::Vector3d totalAcceleration(0, 0, 0);
-    for(int i = 0; i < particlesInTheSystem.size(); i++)
-    {
-        if(getDistance(this, &(particlesInTheSystem.at(i))) != 0 || (this->getMass() != particlesInTheSystem.at(i).getMass()))
-        {
-            totalAcceleration = totalAcceleration + calcAcceleration(this, &(particlesInTheSystem.at(i)), 0.0);
-        }    
-    }
-    accelerationParticle = totalAcceleration;
-}
-
-/* initialConditionGenerator for the solar system with the sun and 8 planets */
-
-initialConditionGenerator::initialConditionGenerator()
+void solarSystemGenerator::generateInitialConditions(int numberOfParticles)
 {
     Particle sun(1.);
     Particle mercury(1./6023600);
@@ -50,76 +30,84 @@ initialConditionGenerator::initialConditionGenerator()
     Particle saturn(1./3499);
     Particle uranus(1./22962);
     Particle neptune(1./19352);
-    planets.push_back(sun);
-    planets.push_back(mercury);
-    planets.push_back(venus);
-    planets.push_back(earth);
-    planets.push_back(mars);
-    planets.push_back(jupiter);
-    planets.push_back(saturn);
-    planets.push_back(uranus);
-    planets.push_back(neptune);
-    distanceFromSun.push_back(0.0);
-    distanceFromSun.push_back(0.4);
-    distanceFromSun.push_back(0.7);
-    distanceFromSun.push_back(1.);
-    distanceFromSun.push_back(1.5);
-    distanceFromSun.push_back(5.2);
-    distanceFromSun.push_back(9.5);
-    distanceFromSun.push_back(19.2);
-    distanceFromSun.push_back(30.1);
-    namesPlanets.push_back("Sun");
-    namesPlanets.push_back("Mercury");
-    namesPlanets.push_back("Venus");
-    namesPlanets.push_back("Earth");
-    namesPlanets.push_back("Mars");
-    namesPlanets.push_back("Jupiter");
-    namesPlanets.push_back("Saturn");
-    namesPlanets.push_back("Uranus");
-    namesPlanets.push_back("Neptune");
+    systemOfParticles.push_back(sun);
+    systemOfParticles.push_back(mercury);
+    systemOfParticles.push_back(venus);
+    systemOfParticles.push_back(earth);
+    systemOfParticles.push_back(mars);
+    systemOfParticles.push_back(jupiter);
+    systemOfParticles.push_back(saturn);
+    systemOfParticles.push_back(uranus);
+    systemOfParticles.push_back(neptune);
+    distanceFromCentralStar.push_back(0.0);
+    distanceFromCentralStar.push_back(0.4);
+    distanceFromCentralStar.push_back(0.7);
+    distanceFromCentralStar.push_back(1.);
+    distanceFromCentralStar.push_back(1.5);
+    distanceFromCentralStar.push_back(5.2);
+    distanceFromCentralStar.push_back(9.5);
+    distanceFromCentralStar.push_back(19.2);
+    distanceFromCentralStar.push_back(30.1);
+    namesParticles.push_back("Sun");
+    namesParticles.push_back("Mercury");
+    namesParticles.push_back("Venus");
+    namesParticles.push_back("Earth");
+    namesParticles.push_back("Mars");
+    namesParticles.push_back("Jupiter");
+    namesParticles.push_back("Saturn");
+    namesParticles.push_back("Uranus");
+    namesParticles.push_back("Neptune");
     sun.setPosition(Eigen::Vector3d(0., 0., 0.));
     sun.setVelocity(Eigen::Vector3d(0., 0., 0.));
 
     for(int i = 1; i < 9; i++)
     {
         double theta = randomValueGenerator(0., 2 * M_PI);
-        planets.at(i).setPosition( Eigen::Vector3d( distanceFromSun.at(i) * std::sin(theta) , distanceFromSun.at(i) * std::cos(theta) , 0.0 ) );
-        planets.at(i).setVelocity( Eigen::Vector3d( ((-1) * (std::cos(theta))) / std::sqrt(distanceFromSun.at(i)) , (std::sin(theta)) / std::sqrt(distanceFromSun.at(i)) , 0.0 ) );
+        systemOfParticles.at(i).setPosition( Eigen::Vector3d( distanceFromCentralStar.at(i) * std::sin(theta) , distanceFromCentralStar.at(i) * std::cos(theta) , 0.0 ) );
+        systemOfParticles.at(i).setVelocity( Eigen::Vector3d( ((-1) * (std::cos(theta))) / std::sqrt(distanceFromCentralStar.at(i)) , (std::sin(theta)) / std::sqrt(distanceFromCentralStar.at(i)) , 0.0 ) );
     }
 }
 
-/* Get the vector of particles (i.e. planets) */
+/* Get the vector of particles (i.e. systemOfParticles) */
 
-std::vector<Particle> initialConditionGenerator::getSolarSystemInformations()
+std::vector<Particle> InitialConditionGenerator::getSystemInformations()
 {
-    return planets;
+    return systemOfParticles;
 }
 
 /* Get the vector of strings with the names of the planets for printing purposes */
 
-std::vector<std::string> initialConditionGenerator::getNamesPlanets()
+std::vector<std::string> solarSystemGenerator::getIdentifierParticles()
 {
-    return namesPlanets;
+    return namesParticles;
+}
+
+/* This function returns the number of iterations needed for the evolution of the system */
+
+int InitialConditionGenerator::getIterations()
+{
+    return iterations;
 }
 
 /* Evolution of the system through the calculation of the total acceleration for each particle and through the update function. */
 
-void initialConditionGenerator::evolutionOfSystem(std::string method, double upperLimit, double dt)
+void InitialConditionGenerator::evolutionOfSystem(std::string method, double upperLimit, double dt, double epsilon)
 {
     if(method == "time")
     {
         double t = 0;
         while(t < upperLimit)
         {
-            for(int i = 0; i < planets.size(); i++)
+            for(int i = 0; i < systemOfParticles.size(); i++)
             {
-                planets.at(i).calcTotalAcceleration(planets);
+                systemOfParticles.at(i).calcTotalAcceleration(systemOfParticles, epsilon);
             }
-            for(int i = 0; i < planets.size(); i++)
+            for(int i = 0; i < systemOfParticles.size(); i++)
             {
-                planets.at(i).update(dt);
+                systemOfParticles.at(i).update(dt);
             }
             t = t + dt;
+            iterations++;
         }
     }
     else
@@ -127,14 +115,46 @@ void initialConditionGenerator::evolutionOfSystem(std::string method, double upp
         int steps = (int)upperLimit;
         for(int j = 0; j < steps; j++)
         {
-            for(int i = 0; i < planets.size(); i++)
+            for(int i = 0; i < systemOfParticles.size(); i++)
             {
-                planets.at(i).calcTotalAcceleration(planets);
+                systemOfParticles.at(i).calcTotalAcceleration(systemOfParticles, epsilon);
             }
-            for(int i = 0; i < planets.size(); i++)
+            for(int i = 0; i < systemOfParticles.size(); i++)
             {
-                planets.at(i).update(dt);
+                systemOfParticles.at(i).update(dt);
             }
+            iterations++;
         }
+    }
+}
+
+/* Function that calculates the total energy of a system of particles */
+
+double calculateTotalEnergy(std::vector<Particle> particlesInTheSystem)
+{
+    double totalKineticEnergy = 0.;
+    double totalPotentialEnergy = 0.;
+    for(int i = 0; i < particlesInTheSystem.size(); i++)
+    {
+        totalKineticEnergy = totalKineticEnergy + particlesInTheSystem.at(i).calculateKineticEnergy();
+        totalPotentialEnergy = totalPotentialEnergy + particlesInTheSystem.at(i).calculatePotentialEnergy(particlesInTheSystem);
+    }
+    return totalKineticEnergy + totalPotentialEnergy; 
+}
+
+void nBodySystemGenerator::generateInitialConditions(int numberOfParticles)
+{
+    systemOfParticles.push_back(Particle(1.));
+    systemOfParticles.at(0).setPosition(Eigen::Vector3d(0., 0., 0.));
+    systemOfParticles.at(0).setVelocity(Eigen::Vector3d(0., 0., 0.));
+    distanceFromCentralStar.push_back(0);
+
+    for(int i = 1; i < numberOfParticles; i++)
+    {
+        systemOfParticles.push_back(Particle(randomValueGenerator(1./6000000, 1./1000)));
+        double theta = randomValueGenerator(0., 2 * M_PI);
+        distanceFromCentralStar.push_back(randomValueGenerator(0.4, 30.));
+        systemOfParticles.at(i).setPosition( Eigen::Vector3d( distanceFromCentralStar.at(i) * std::sin(theta) , distanceFromCentralStar.at(i) * std::cos(theta) , 0.0 ) );
+        systemOfParticles.at(i).setVelocity( Eigen::Vector3d( ((-1) * (std::cos(theta))) / std::sqrt(distanceFromCentralStar.at(i)) , (std::sin(theta)) / std::sqrt(distanceFromCentralStar.at(i)) , 0.0 ) );
     }
 }

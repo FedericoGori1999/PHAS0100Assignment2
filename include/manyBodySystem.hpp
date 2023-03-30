@@ -11,16 +11,37 @@ double getDistance(Particle *p1, Particle *p2);
 
 Eigen::Vector3d calcAcceleration(Particle *p1, Particle *p2, double epsilon);
 
-class initialConditionGenerator
+double calculateTotalEnergy(std::vector<Particle> particlesInTheSystem);
+
+class InitialConditionGenerator
 {
     public:
-    initialConditionGenerator();
-    std::vector<Particle> getSolarSystemInformations();
-    std::vector<std::string> getNamesPlanets();
-    void evolutionOfSystem(std::string method, double upperLimit, double dt);
+    virtual void generateInitialConditions(int numberOfParticles) = 0;
+    std::vector<Particle> getSystemInformations();
+    void evolutionOfSystem(std::string method, double upperLimit, double dt, double epsilon);
+    int getIterations();
+    
+    protected:
+
+    std::vector<Particle> systemOfParticles{};
+    std::vector<double> distanceFromCentralStar {};
+    int iterations = 0;
+};
+
+class solarSystemGenerator : public InitialConditionGenerator
+{
+    public:
+
+    void generateInitialConditions(int numberOfParticles);
+    std::vector<std::string> getIdentifierParticles();
 
     private:
-    std::vector<Particle> planets{};
-    std::vector<double> distanceFromSun {};
-    std::vector<std::string> namesPlanets {};
+
+    std::vector<std::string> namesParticles {};
+};
+
+class nBodySystemGenerator : public InitialConditionGenerator
+{
+    public:
+    void generateInitialConditions(int numberOfParticles);
 };

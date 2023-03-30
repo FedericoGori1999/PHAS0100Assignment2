@@ -1,4 +1,5 @@
 #include "particle.hpp"
+#include "manyBodySystem.hpp"
 
 Particle::Particle(double massArgument)
 {
@@ -84,6 +85,22 @@ void Particle::update(double dt)
     velocityParticle = this->getVelocity() + dt * this->getAcceleration();
 }
 
+/* Calculate the total acceleration on a particle. The particle excludes itself from the calculation through a check that involves the mass and the distance with a particle (i.e. if two particles have the
+same mass and are really close in terms of distance, then the program treat them as the same particle). */
+
+void Particle::calcTotalAcceleration(std::vector<Particle> particlesInTheSystem, double epsilon)
+{
+    Eigen::Vector3d totalAcceleration(0, 0, 0);
+    for(int i = 0; i < particlesInTheSystem.size(); i++)
+    {
+        if(getDistance(this, &(particlesInTheSystem.at(i))) != 0 || (this->getMass() != particlesInTheSystem.at(i).getMass()))
+        {
+            totalAcceleration = totalAcceleration + calcAcceleration(this, &(particlesInTheSystem.at(i)), epsilon);
+        }    
+    }
+    accelerationParticle = totalAcceleration;
+}
+
 /* Generates a random real number in the interval [minRandomValue, maxRandomValue] following a uniform distribution */
 
 double randomValueGenerator(double minRandomValue, double maxRandomValue)
@@ -91,8 +108,33 @@ double randomValueGenerator(double minRandomValue, double maxRandomValue)
     std::uniform_real_distribution<> uniformReal(minRandomValue, maxRandomValue);
     std::mt19937 rng;
     std::random_device trueRandomNumber;
+
+    /* Explain how to change the seed (see 2.3) */
+
     rng.seed(trueRandomNumber());
     auto randomValue = std::bind(uniformReal, rng);
     double result = randomValue();
     return result;
+}
+
+/* This function returns the kinetic energy of the particle */
+
+double Particle::calculateKineticEnergy()
+{
+    return 0.5 * this->getMass() * this->getVelocity().dot(this->getVelocity());
+}
+
+/* This function calculates the potential energy acting on a particle */
+
+double Particle::calculatePotentialEnergy(std::vector<Particle> particlesInTheSystem)
+{
+    double potentialEnergy = 0.;
+    for(int i = 0; i < particlesInTheSystem.size(); i++)
+    {
+        if(getDistance(this, &(particlesInTheSystem.at(i))) != 0 || (this->getMass() != particlesInTheSystem.at(i).getMass()))
+        {
+           potentialEnergy = potentialEnergy - 0.5 * ( (this->getMass() * particlesInTheSystem.at(i).getMass()) / (getDistance(this, &(particlesInTheSystem.at(i)))) );
+        }
+    }
+    return potentialEnergy;
 }

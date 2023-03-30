@@ -113,7 +113,7 @@ TEST_CASE("Calculate the acceleration of one particle due to the presence of ano
     REQUIRE(accelerationComparison);
 }
 
-/* Testing calcAcceleration for softeting factor != 0 */
+/* Testing calcAcceleration for softening factor != 0 */
 
 TEST_CASE("Calculate the acceleration of one particle due to the presence of another one at short distance", "[calcAccEpsNot0]")
 {
@@ -121,7 +121,7 @@ TEST_CASE("Calculate the acceleration of one particle due to the presence of ano
     Particle p2(2);
     p1.setPosition(Eigen::Vector3d(0, 0, 0));
     p2.setPosition(Eigen::Vector3d(0.001, 0, 0));
-    Eigen::Vector3d accelerationFinal = calcAcceleration(&p1, &p2, 0.0);
+    Eigen::Vector3d accelerationFinal = calcAcceleration(&p1, &p2, 0.1);
     bool accelerationComparison(accelerationFinal.isApprox(Eigen::Vector3d(1.9997, 0, 0), 0.01));
     REQUIRE(accelerationComparison);
 }
@@ -130,17 +130,14 @@ TEST_CASE("Calculate the acceleration of one particle due to the presence of ano
 
 TEST_CASE("Calculating total acceleration on one particle", "[totalAcceleration]")
 {
-    std::vector<Particle> particlesInTheSystem {};
     Particle p1(1);
     Particle p2(2);
     Particle p3(1);
     p1.setPosition(Eigen::Vector3d(0, 0, 0));
     p2.setPosition(Eigen::Vector3d(2, 0, 0));
     p3.setPosition(Eigen::Vector3d(-1, 0, 0));
-    particlesInTheSystem.push_back(p1);
-    particlesInTheSystem.push_back(p2);
-    particlesInTheSystem.push_back(p3);
-    p1.calcTotalAcceleration(particlesInTheSystem);
+    std::vector<Particle> particlesInTheSystem {p1, p2, p3};
+    p1.calcTotalAcceleration(particlesInTheSystem, 0.0);
     bool accelerationComparison(p1.getAcceleration().isApprox(Eigen::Vector3d(-0.5, 0, 0), 0.01));
     REQUIRE(accelerationComparison);
 }
@@ -149,11 +146,10 @@ TEST_CASE("Calculating total acceleration on one particle", "[totalAcceleration]
 
 TEST_CASE("Calculating total acceleration on one particle when there is no other particle", "[totalAccelerationOnlyOne]")
 {
-    std::vector<Particle> particlesInTheSystem {};
     Particle p1(1);
     p1.setPosition(Eigen::Vector3d(0, 0, 0));
-    particlesInTheSystem.push_back(p1);
-    p1.calcTotalAcceleration(particlesInTheSystem);
+    std::vector<Particle> particlesInTheSystem {p1};
+    p1.calcTotalAcceleration(particlesInTheSystem, 0.0);
     bool accelerationComparison(p1.getAcceleration().isApprox(Eigen::Vector3d(0, 0, 0), 0.01));
     REQUIRE(accelerationComparison);
 }
@@ -162,27 +158,25 @@ TEST_CASE("Calculating total acceleration on one particle when there is no other
 
 TEST_CASE("Calculating total acceleration on one particle in case of spatial symmetry", "[totalAccelerationSymmetry]")
 {
-    std::vector<Particle> particlesInTheSystem {};
     Particle p1(1);
     Particle p2(1);
     Particle p3(1);
     p1.setPosition(Eigen::Vector3d(0, 0, 0));
     p2.setPosition(Eigen::Vector3d(1, 1, 0));
     p3.setPosition(Eigen::Vector3d(-1, -1, 0));
-    particlesInTheSystem.push_back(p1);
-    particlesInTheSystem.push_back(p2);
-    particlesInTheSystem.push_back(p3);
-    p1.calcTotalAcceleration(particlesInTheSystem);
+    std::vector<Particle> particlesInTheSystem {p1, p2, p3};
+    p1.calcTotalAcceleration(particlesInTheSystem, 0.0);
     bool accelerationComparison(p1.getAcceleration().isApprox(Eigen::Vector3d(0, 0, 0), 0.01));
     REQUIRE(accelerationComparison);
 }
 
-/* Unit test of the initialConditionGenerator for the solar system with 8 planets */
+/* Unit test of the solarSystemGenerator for the solar system with 8 planets */
 
-TEST_CASE("Testing the initialisation of the initialConditionGenerator for the solar system with 8 planets", "[testingInitialGenerator]")
+TEST_CASE("Testing the initialisation of the solarSystemGenerator for the solar system with 8 planets", "[testingInitialGenerator]")
 {
-    initialConditionGenerator systemOne;
-    std::vector<Particle> solarSystem = systemOne.getSolarSystemInformations();
+    solarSystemGenerator systemOne;
+    systemOne.generateInitialConditions(9);
+    std::vector<Particle> solarSystem = systemOne.getSystemInformations();
     REQUIRE(solarSystem.at(0).getMass() == 1.);
     REQUIRE(solarSystem.at(1).getMass() == 1./6023600);
     REQUIRE(solarSystem.at(2).getMass() == 1./408524);
@@ -205,15 +199,60 @@ TEST_CASE("Simulating one timeStep for one body orbiting around the Sun", "[oneB
     sun.setVelocity(Eigen::Vector3d(0., 0., 0.));
     planet.setPosition(Eigen::Vector3d(1., 0., 0.));
     planet.setVelocity(Eigen::Vector3d(0., 1., 0.));
-    std::vector<Particle> system {};
-    system.push_back(sun);
-    system.push_back(planet);
-    sun.calcTotalAcceleration(system);
-    planet.calcTotalAcceleration(system);
+    std::vector<Particle> system {sun, planet};
+    sun.calcTotalAcceleration(system, 0.0);
+    planet.calcTotalAcceleration(system, 0.0);
     sun.update(dt);
     planet.update(dt);
     REQUIRE(sun.getPosition().isApprox(Eigen::Vector3d(0., 0., 0.), 0.01));
     REQUIRE(sun.getVelocity().isApprox(Eigen::Vector3d(0.01, 0., 0.), 0.01));
     REQUIRE(planet.getPosition().isApprox(Eigen::Vector3d(1., 0.1, 0.), 0.01));
     REQUIRE(planet.getVelocity().isApprox(Eigen::Vector3d(-0.1, 1., 0.), 0.01));
+}
+
+/* Testing the function that calculates the kinetic energy of a particle */
+
+TEST_CASE("Calculate the kinetic energy of a particle", "[kineticParticle]")
+{
+    Particle p(1);
+    p.setVelocity(Eigen::Vector3d(1., 1., 0));
+    REQUIRE(p.calculateKineticEnergy() == 1.);
+}
+
+/* Testing the function that calculates the potential energy in a system of 3 particles */
+
+TEST_CASE("Calculate the potential energy in a system of 3 particles", "[potentialParticle]")
+{
+    Particle p1(1);
+    Particle p2(2);
+    Particle p3(4);
+    p1.setPosition(Eigen::Vector3d(0., 0., 0.));
+    p2.setPosition(Eigen::Vector3d(1., 0., 0.));
+    p3.setPosition(Eigen::Vector3d(-2., 0., 0.));
+    std::vector<Particle> particles {p1, p2, p3};
+    REQUIRE(p1.calculatePotentialEnergy(particles) == -2.);
+}
+
+/* Testing the function that calculates the total energy over a system with 2 particles */
+
+TEST_CASE("Calculate the total energy of a system of 2 particles", "[totalEnergy]")
+{
+    Particle p1(1);
+    Particle p2(2);
+    p1.setPosition(Eigen::Vector3d(0., 0., 0.));
+    p2.setPosition(Eigen::Vector3d(2., 0., 0.));
+    p1.setVelocity(Eigen::Vector3d(1., 1., 0.));
+    p2.setVelocity(Eigen::Vector3d(0., 0., 1.));
+    std::vector<Particle> particles {p1, p2};
+    REQUIRE(calculateTotalEnergy(particles) == 1.);
+}
+
+/* Testing the initialConditionGenerator for a system of N particles */
+
+TEST_CASE("Testing the initialConditionGenerator for a system of N particles", "[nPartcilesGenerator]")
+{
+    nBodySystemGenerator system;
+    int N = 1000;
+    system.generateInitialConditions(N);
+    REQUIRE(system.getSystemInformations().size() == N);
 }

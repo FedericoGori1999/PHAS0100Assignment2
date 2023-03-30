@@ -7,6 +7,8 @@ of the string, an help message should be printed */
 
 /* IMPLEMENT EXCEPTIONS FOR BAD READ OF DOUBLE NUMBERS */
 
+/* Function to time the execution of the program */
+
 typedef std::chrono::high_resolution_clock Clock;
 
 double tSeconds(std::chrono::time_point<Clock> t1, std::chrono::time_point<Clock> t2)
@@ -16,6 +18,7 @@ double tSeconds(std::chrono::time_point<Clock> t1, std::chrono::time_point<Clock
 
 int main(int argc, char **argv) 
 {
+  int count = 0;
   Eigen::IOFormat CommaInitFmt(Eigen::FullPrecision, Eigen::DontAlignCols, ",", ", ");
   std::string helpString = argv[argc-1];
   if(helpString == "-h" || helpString == "--help" || argc == 1)
@@ -32,9 +35,10 @@ int main(int argc, char **argv)
     }
     else
     {
-      initialConditionGenerator solarSystem;
-      std::vector<std::string> planetsToPrint = solarSystem.getNamesPlanets();
-      std::vector<Particle> informationsToPrint = solarSystem.getSolarSystemInformations();
+      solarSystemGenerator solarSystem;
+      solarSystem.generateInitialConditions(9);
+      std::vector<std::string> particlesToPrint = solarSystem.getIdentifierParticles();
+      std::vector<Particle> informationsToPrint = solarSystem.getSystemInformations();
       std::string dtString = argv[1];
       std::string methodRun = argv[2];
       std::string timeString = argv[3];
@@ -45,23 +49,25 @@ int main(int argc, char **argv)
 
       if(methodRun == "time")
       {
+        double t = std::stod(timeString);
         std::cout << "\n-> Initial positions and velocities of the planets in the system.\n" << std::endl;
         for(int i = 0; i < 9; i++)
         {
-          std::cout << "Planet " << planetsToPrint.at(i) << ":\nPosition: (" << informationsToPrint.at(i).getPosition().format(CommaInitFmt) << ")\nVelocity: (" << informationsToPrint.at(i).getVelocity().format(CommaInitFmt) << ")\n" << std::endl;
+          std::cout << "Planet " << particlesToPrint.at(i) << ":\nPosition: (" << informationsToPrint.at(i).getPosition().format(CommaInitFmt) << ")\nVelocity: (" << informationsToPrint.at(i).getVelocity().format(CommaInitFmt) << ")\n" << std::endl;
         }
-        std::cout << "\n-> Running the simulation\n" << std::endl;
-        double t = std::stod(timeString);
+        std::cout << "\n-> Total energy of the system before the update: " << calculateTotalEnergy(informationsToPrint) << " J\n" << std::endl;
+        std::cout << "\n-> Running the simulation with dt = " << dt << " s with an integration time of " << t << " s\n" << std::endl;
         auto t1 = Clock::now();
-        solarSystem.evolutionOfSystem(methodRun, t, dt);
+        solarSystem.evolutionOfSystem(methodRun, t, dt, 0.0);
         auto t2 = Clock::now();
-        informationsToPrint = solarSystem.getSolarSystemInformations();
+        informationsToPrint = solarSystem.getSystemInformations();
         std::cout << "\n-> Final positions and velocities of the planets in the system.\n" << std::endl;
         for(int i = 0; i < 9; i++)
         {
-          std::cout << "Planet " << planetsToPrint.at(i) << ":\nPosition: (" << informationsToPrint.at(i).getPosition().format(CommaInitFmt) << ")\nVelocity: (" << informationsToPrint.at(i).getVelocity().format(CommaInitFmt) << ")\n" << std::endl;
+          std::cout << "Planet " << particlesToPrint.at(i) << ":\nPosition: (" << informationsToPrint.at(i).getPosition().format(CommaInitFmt) << ")\nVelocity: (" << informationsToPrint.at(i).getVelocity().format(CommaInitFmt) << ")\n" << std::endl;
         }
-        std::cout << "\n-> Time elapsed: " << tSeconds(t1, t2) << " s\n" << std::endl;
+        std::cout << "\n-> Total energy of the system after the update: " << calculateTotalEnergy(informationsToPrint) << " J\n" << std::endl;
+        std::cout << "\n-> Time elapsed: " << tSeconds(t1, t2) << " s\n\n\n-> Average timestep: " << tSeconds(t1, t2)/solarSystem.getIterations() << " s/step\n" << std::endl;
         return 0;
       }
 
@@ -69,23 +75,25 @@ int main(int argc, char **argv)
 
       else if(methodRun == "steps")
       {
+        int steps = std::stoi(stepsString);
         std::cout << "\n-> Initial positions and velocities of the planets in the system.\n" << std::endl;
         for(int i = 0; i < 9; i++)
         {
-          std::cout << "Planet " << planetsToPrint.at(i) << ":\nPosition: (" << informationsToPrint.at(i).getPosition().format(CommaInitFmt) << ")\nVelocity: (" << informationsToPrint.at(i).getVelocity().format(CommaInitFmt) << ")\n" << std::endl;
+          std::cout << "Planet " << particlesToPrint.at(i) << ":\nPosition: (" << informationsToPrint.at(i).getPosition().format(CommaInitFmt) << ")\nVelocity: (" << informationsToPrint.at(i).getVelocity().format(CommaInitFmt) << ")\n" << std::endl;
         }
-        std::cout << "\n-> Running the simulation\n" << std::endl;
-        int steps = std::stoi(stepsString);
+        std::cout << "\n-> Total energy of the system before the update: " << calculateTotalEnergy(informationsToPrint) << " J\n" << std::endl;
+        std::cout << "\n-> Running the simulation with dt = " << dt << " s over " << steps << " steps\n" << std::endl;
         auto t1 = Clock::now();
-        solarSystem.evolutionOfSystem(methodRun, steps, dt);
+        solarSystem.evolutionOfSystem(methodRun, steps, dt, 0.0);
         auto t2 = Clock::now();
-        informationsToPrint = solarSystem.getSolarSystemInformations();
+        informationsToPrint = solarSystem.getSystemInformations();
         std::cout << "\n-> Final positions and velocities of the planets in the system.\n" << std::endl;
         for(int i = 0; i < 9; i++)
         {
-          std::cout << "Planet " << planetsToPrint.at(i) << ":\nPosition: (" << informationsToPrint.at(i).getPosition().format(CommaInitFmt) << ")\nVelocity: (" << informationsToPrint.at(i).getVelocity().format(CommaInitFmt) << ")\n" << std::endl;
+          std::cout << "Planet " << particlesToPrint.at(i) << ":\nPosition: (" << informationsToPrint.at(i).getPosition().format(CommaInitFmt) << ")\nVelocity: (" << informationsToPrint.at(i).getVelocity().format(CommaInitFmt) << ")\n" << std::endl;
         }
-        std::cout << "\n-> Time elapsed: " << tSeconds(t1, t2) << " s\n" << std::endl;
+        std::cout << "\n-> Total energy of the system after the update: " << calculateTotalEnergy(informationsToPrint) << " J\n" << std::endl;
+        std::cout << "\n-> Time elapsed: " << tSeconds(t1, t2) << " s\n\n\n-> Average timestep: " << tSeconds(t1, t2)/solarSystem.getIterations() << " s/step\n" << std::endl;
         return 0;
       }
       else

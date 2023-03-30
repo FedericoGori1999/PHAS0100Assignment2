@@ -11,21 +11,3 @@ find_package(OpenMP REQUIRED)
 
 target_link_libraries(particle_lib PUBLIC Eigen3::Eigen OpenMP::OpenMP_CXX)
 target_link_libraries(manyBody_lib PUBLIC Eigen3::Eigen OpenMP::OpenMP_CXX particle_lib)
-
-
-#set(PHAS0100ASSIGNMENT1_LIBRARY_NAME PHAS0100ASSIGNMENT1)
-
-#set(PHAS0100ASSIGNMENT1_LIBRARY_SRCS
- # golGameClass.cpp
-  #golGridClass.cpp
-  #golFunctions.cpp
-  #golException.cpp
-#)
-
-#set(PHAS0100ASSIGNMENT1_LIBRARY_HDRS
- # golExceptionMacro.h
-#)
-
-#add_library(${PHAS0100ASSIGNMENT1_LIBRARY_NAME} ${PHAS0100ASSIGNMENT1_LIBRARY_HDRS} ${PHAS0100ASSIGNMENT1_LIBRARY_SRCS})
-
-#target_link_libraries(${PHAS0100ASSIGNMENT1_LIBRARY_NAME} PRIVATE ${ALL_THIRD_PARTY_LIBRARIES})
