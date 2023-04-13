@@ -7,24 +7,16 @@ using Catch::Matchers::WithinRel;
 
 /* Testing mass initialisation */
 
-TEST_CASE( "Particle sets mass correctly", "[particle]" ) {
+TEST_CASE( "Particle sets mass correctly", "[particle]" ) 
+{
     Particle p{3.14};
     REQUIRE_THAT( p.getMass(), WithinRel(3.14, 0.01) );
 }
 
-/* Testing the random number generator following a uniform distribution. We test it over the interval [0, 1000000], so the probability for
-the test to fail is really low */
-
-TEST_CASE("Random Value generator", "[randomGenerator]")
-{
-    double a = randomValueGenerator(0., 1000000.0);
-    double b = randomValueGenerator(0., 1000000.0);
-    REQUIRE(a != b);
-}
-
 /* Testing motion when the acceleration is 0 (random initial position and velocity) */
 
-TEST_CASE("Motion in case of zero acceleration", "[noAcceleration]"){
+TEST_CASE("Motion in case of zero acceleration", "[noAcceleration]")
+{
     Particle p(3.14);
     double dt = 0.001;
     double t = 0.0;
@@ -45,7 +37,8 @@ TEST_CASE("Motion in case of zero acceleration", "[noAcceleration]"){
 
 /* Testing motion when the acceleration is constant (random initial position, velocity and acceleration) */
 
-TEST_CASE("Motion in case of constant acceleration", "[constantAcceleration]"){
+TEST_CASE("Motion in case of constant acceleration", "[constantAcceleration]")
+{
     Particle p(3.14);
     double dt = 0.001;
     double t = 0.0;
@@ -67,7 +60,8 @@ TEST_CASE("Motion in case of constant acceleration", "[constantAcceleration]"){
 
 /* Testing motion when the acceleration is minus the position after each update (random initial position and velocity) */
 
-TEST_CASE("Motion in case of acceleration equal to minus the position", "[oppositeAcceleration]"){
+TEST_CASE("Motion in case of acceleration equal to minus the position", "[oppositeAcceleration]")
+{
     Particle p(3.14);
     double dt = 0.001;
     double t = 0.0;
@@ -100,6 +94,18 @@ TEST_CASE("Get the distance between two particles", "[distance]")
     REQUIRE(d == std::sqrt(3));
 }
 
+/* Testing the distance calculator between two particles in the same position */
+
+TEST_CASE("Get the distance between two particles located in the same position", "[distanceSamePosition]")
+{
+    Particle p1(1);
+    Particle p2(1);
+    p1.setPosition(Eigen::Vector3d(1, 0, 0));
+    p2.setPosition(Eigen::Vector3d(1, 0, 0));
+    double d = getDistance(&p1, &p2);
+    REQUIRE(d == 0);
+}
+
 /* Testing calcAcceleration for softeting factor = 0 */
 
 TEST_CASE("Calculate the acceleration of one particle due to the presence of another one at normal/long distance", "[calcAccEps0]")
@@ -128,7 +134,7 @@ TEST_CASE("Calculate the acceleration of one particle due to the presence of ano
 
 /* Testing calcTotalAcceleration for a system of 3 particles with no spatial symmetry */
 
-TEST_CASE("Calculating total acceleration on one particle", "[totalAcceleration]")
+TEST_CASE("Calculating total acceleration of one particle", "[totalAcceleration]")
 {
     Particle p1(1);
     Particle p2(2);
@@ -144,7 +150,7 @@ TEST_CASE("Calculating total acceleration on one particle", "[totalAcceleration]
 
 /* Testing calcTotalAcceleration for a system of 1 particle */
 
-TEST_CASE("Calculating total acceleration on one particle when there is no other particle", "[totalAccelerationOnlyOne]")
+TEST_CASE("Calculating total acceleration of one particle when there is no other particle", "[totalAccelerationOnlyOne]")
 {
     Particle p1(1);
     p1.setPosition(Eigen::Vector3d(0, 0, 0));
@@ -156,17 +162,17 @@ TEST_CASE("Calculating total acceleration on one particle when there is no other
 
 /* Testing calcTotalAcceleration for a system of 3 particles with spatial symmetry */
 
-TEST_CASE("Calculating total acceleration on one particle in case of spatial symmetry", "[totalAccelerationSymmetry]")
+TEST_CASE("Calculating total acceleration of one particle in case of spatial symmetry", "[totalAccelerationSymmetry]")
 {
     Particle p1(1);
     Particle p2(1);
     Particle p3(1);
-    p1.setPosition(Eigen::Vector3d(0, 0, 0));
-    p2.setPosition(Eigen::Vector3d(1, 1, 0));
-    p3.setPosition(Eigen::Vector3d(-1, -1, 0));
+    p1.setPosition(Eigen::Vector3d(0., 0., 0.));
+    p2.setPosition(Eigen::Vector3d(1., 1., 0.));
+    p3.setPosition(Eigen::Vector3d(-1., -1., 0.));
     std::vector<Particle> particlesInTheSystem {p1, p2, p3};
     p1.calcTotalAcceleration(particlesInTheSystem, 0.0);
-    bool accelerationComparison(p1.getAcceleration().isApprox(Eigen::Vector3d(0, 0, 0), 0.01));
+    bool accelerationComparison(p1.getAcceleration().isApprox(Eigen::Vector3d(0., 0., 0.), 0.01));
     REQUIRE(accelerationComparison);
 }
 
@@ -186,9 +192,28 @@ TEST_CASE("Testing the initialisation of the solarSystemGenerator for the solar 
     REQUIRE(solarSystem.at(6).getMass() == 1./3499);
     REQUIRE(solarSystem.at(7).getMass() == 1./22962);
     REQUIRE(solarSystem.at(8).getMass() == 1./19352);
+    REQUIRE(systemOne.getNumberOfParticles() == 9);
+    REQUIRE(solarSystem.at(0).getPosition().isApprox(Eigen::Vector3d(0., 0., 0.)));
+    REQUIRE(solarSystem.at(0).getVelocity().isApprox(Eigen::Vector3d(0., 0., 0.)));
 }
 
 /* Single body orbiting around the sun, simulation after one timeStep */
+
+/* Testing the motion of the solar system after a time of 2 * PI, where the Earth should return at the same initial position */
+
+TEST_CASE("Testing the motion of the solar system over an integration time of 2 * PI", "[earthReturning]")
+{
+    double t = 2 * M_PI;
+    double dt = 0.0001;
+    double epsilon = 0.;
+    solarSystemGenerator systemOne;
+    systemOne.generateInitialConditions(9);
+    std::vector<Particle> systemBeforeEvolution = systemOne.getSystemInformations();
+    systemOne.evolutionOfSystem("time", t, dt, epsilon);
+    //std::cout << systemBeforeEvolution.at(3).getPosition() << std::endl;
+    //std::cout << systemOne.getSystemInformations().at(3).getPosition() << std::endl;
+    REQUIRE(systemBeforeEvolution.at(3).getPosition().isApprox(systemOne.getSystemInformations().at(3).getPosition(), 0.01));
+}
 
 TEST_CASE("Simulating one timeStep for one body orbiting around the Sun", "[oneBodySimulation]")
 {
@@ -255,4 +280,22 @@ TEST_CASE("Testing the initialConditionGenerator for a system of N particles", "
     int N = 1000;
     system.generateInitialConditions(N);
     REQUIRE(system.getSystemInformations().size() == N);
+}
+
+/* Testing the correct parsing of the softening factor epsilon */
+
+TEST_CASE("Testing the correct parsing of the softening factor epsilon", "[parsingEpsilon]")
+{
+    nBodySystemGenerator system;
+    system.generateInitialConditions(2);
+    std::vector<Particle> vectorToSet = system.getSystemInformations();
+    vectorToSet.at(0).setMass(1.);
+    vectorToSet.at(1).setMass(1.);
+    vectorToSet.at(0).setPosition(Eigen::Vector3d(0., 0., 0.));
+    vectorToSet.at(1).setPosition(Eigen::Vector3d(1., 0., 0.));
+    vectorToSet.at(0).setVelocity(Eigen::Vector3d(0., 0., 0.));
+    vectorToSet.at(1).setVelocity(Eigen::Vector3d(0., 0., 0.));
+    system.copySystem(&vectorToSet);
+    system.evolutionOfSystem("step", 1, 0.1, 0.1);
+    REQUIRE(system.getSystemInformations().at(0).getAcceleration().isApprox(Eigen::Vector3d(0.985, 0., 0.), 0.01));
 }

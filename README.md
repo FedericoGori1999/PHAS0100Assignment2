@@ -452,6 +452,169 @@ Optimisation: -O2
 -> Average timestep: 4.72752e-06 s/step
 
 
+--------------------------------------------------- Testing schedule command for loops and collapse ----------------------------------------------------------------
+
+----> Testing the type of schedule: here we use the increment dt = 0.001, with a final time to reach of 2 * PI for a system of 2048 particles. By running the simulation without parallelism, the execution time of this program requires 130.937 s (i.e. between 1 and 5 minutes time of execution) --
+
+./build/nBodySystemSimulator 0.001 time 6.282185 2048 0.001
+
+-> Energy loss: 3.23873e-08 J
+
+-> Time elapsed: 130.937 s
+
+-> Average timestep: 0.02084 s/step
+
+OMP_NUM_THREADS=1 OMP_SCHEDULE=static ./build/nBodySystemSimulator 0.001 time 6.282185 2048 0.001
+
+-> Energy loss: 3.23873e-08 J
+
+-> Time elapsed: 175.02 s
+
+-> Average timestep: 0.0278562 s/step
+
+OMP_NUM_THREADS=1 OMP_SCHEDULE=dynamic ./build/nBodySystemSimulator 0.001 time 6.282185 2048 0.001
+
+-> Energy loss: 3.23873e-08 J
+
+-> Time elapsed: 412.926 s
+
+-> Average timestep: 0.0657212 s/step
+
+OMP_NUM_THREADS=1 OMP_SCHEDULE=guided ./build/nBodySystemSimulator 0.001 time 6.282185 2048 0.001
+
+-> Energy loss: 3.23873e-08 J
+
+-> Time elapsed: 175.904 s
+
+-> Average timestep: 0.0279969 s/step
+
+-- As we can see, by specifying to use 1 thread and the static type of schedule the program slows down in execution time to 175.02 s compared to the required time 130.937 s in the case of non-parallelisation. If we use the schedule types "dynamic" and "guided" we get 412.926 s and 175.904 s respectively. So, it is better to do not give parallelism instructions to the program if one ends up using 1 thread. --
+
+OMP_NUM_THREADS=2 OMP_SCHEDULE=static ./build/nBodySystemSimulator 0.001 time 6.282185 2048 0.001
+
+-> Energy loss: 3.23873e-08 J
+
+-> Time elapsed: 98.1449 s
+
+-> Average timestep: 0.0156207 s/step
+
+OMP_NUM_THREADS=2 OMP_SCHEDULE=dynamic ./build/nBodySystemSimulator 0.001 time 6.282185 2048 0.001
+
+-> Energy loss: 3.23873e-08 J
+
+-> Time elapsed: 213.187 s
+
+-> Average timestep: 0.0339307 s/step
+
+OMP_NUM_THREADS=2 OMP_SCHEDULE=guided ./build/nBodySystemSimulator 0.001 time 6.282185 2048 0.001
+
+-> Energy loss: 3.23873e-08 J
+
+-> Time elapsed: 101.713 s
+
+-> Average timestep: 0.0161886 s/step
+
+-- In using 2 threads, we get the times 98.1449 s for the static schedule (x 1.33 speed-up compared to single thread result without parallelism instructions), 213.187 s for the dynamic schedule (x 0.61 (slower!) speed-up compared to single thread result without parallelism instructions) and 101.713 s for the guided schedule (x 1.29 speed-up compared to single thread result without parallelism instructions). The static schedule is the best method to reduce the execution time here. --
+
+OMP_NUM_THREADS=4 OMP_SCHEDULE=static ./build/nBodySystemSimulator 0.001 time 6.282185 2048 0.001
+
+-> Energy loss: 3.23873e-08 J
+
+-> Time elapsed: 78.9814 s
+
+-> Average timestep: 0.0125706 s/step
+
+OMP_NUM_THREADS=4 OMP_SCHEDULE=dynamic ./build/nBodySystemSimulator 0.001 time 6.282185 2048 0.001
+
+-> Energy loss: 3.23873e-08 J
+
+-> Time elapsed: 132.618 s
+
+-> Average timestep: 0.0211075 s/step
+
+OMP_NUM_THREADS=4 OMP_SCHEDULE=guided ./build/nBodySystemSimulator 0.001 time 6.282185 2048 0.001
+
+-> Energy loss: 3.23873e-08 J
+
+-> Time elapsed: 64.702 s
+
+-> Average timestep: 0.0102979 s/step
+
+-- In using 4 threads, we get the times 78.9814 s for the static schedule (x 1.66 speed-up compared to single thread result without parallelism instructions), 132.618 s for the dynamic schedule (x 0.99 (slower!) speed-up compared to single thread result without parallelism instructions) and 64.702 s for the guided schedule (x 2.02 speed-up compared to single thread result without parallelism instructions). The guided schedule is the best method to reduce the execution time here. --
+
+OMP_NUM_THREADS=8 OMP_SCHEDULE=static ./build/nBodySystemSimulator 0.001 time 6.282185 2048 0.001
+
+-> Energy loss: 3.23873e-08 J
+
+-> Time elapsed: 65.4946 s
+
+-> Average timestep: 0.0104241 s/step
+
+OMP_NUM_THREADS=8 OMP_SCHEDULE=dynamic ./build/nBodySystemSimulator 0.001 time 6.282185 2048 0.001
+
+-> Energy loss: 3.23873e-08 J
+
+-> Time elapsed: 126.873 s
+
+-> Average timestep: 0.020193 s/step
+
+OMP_NUM_THREADS=8 OMP_SCHEDULE=guided ./build/nBodySystemSimulator 0.001 time 6.282185 2048 0.001
+
+-> Energy loss: 3.23873e-08 J
+
+-> Time elapsed: 62.1901 s
+
+-> Average timestep: 0.00989816 s/step
+
+-- In using 8 threads, we get the times 65.4946 s for the static schedule (x 2.00 speed-up compared to single thread result without parallelism instructions), 126.873 s for the dynamic schedule (x 1.03 speed-up compared to single thread result without parallelism instructions) and 62.1901 s for the guided schedule (x 2.11 speed-up compared to single thread result without parallelism instructions). The guided schedule is the best method to reduce the execution time here. --
+
+-- As we can see from the results above, the schedule types "guided" and "static" are the one that save the biggest amount of time, with the first that is slightly better. The "dynamic" schedule is the worst one. --
+
+----> Testing the implementation of collapse?
+
+
+--------------------------------------------------- Strong scaling experiment ----------------------------------------------------------------
+
+PC Specs: MacBook Air M1 (8 total cores: 4 performance, 4 "efficiency")
+2048 particles simulated with an integration time of 2 * PI, dt = 0.001, epsilon 0.001, schedule type = guided (most efficient one as demonstrated before)
+
+| `OMP_NUM_THREADS | Time (s) | Speedup |
+|                 1|   175.914|       --|
+|                 2|   98.5023|    x1.79|
+|                 3|   73.8748|    x2.38|
+|                 4|   61.5026|    x2.86|
+|                 5|   65.7954|    x2.67|
+|                 6|   65.4631|    x2.69|
+|                 7|   66.1871|    x2.66|
+|                 8|   66.3256|    x2.65|
+|                16|   65.3838|    x2.69|
+
+--------------------------------------------------- Weak scaling experiment ----------------------------------------------------------------
+
+MacBook Air M1 (8 total cores: 4 performance, 4 "efficiency")
+1024 * numThreadparticles simulated with an integration time of 2 * PI, dt = 0.001, epsilon 0.001, schedule type = guided (most efficient one as demonstrated before)
+
+| `OMP_NUM_THREADS | Num Particles | Time (s) | Speedup |
+|                 1|           1024|   46.6919|       --|
+|                 2|           2048|   100.294|        x|
+|                 3|           3072|   171.286|        x|
+|                 4|           4096|   249.026|        x|
+|                 5|           5120|   419.629|        x|
+|                 6|           6144|   597.239|        x|
+|                 7|           7168|   806.906|        x|
+|                 8|           8192|    1051.3|        x|
+
+
+
+--------------------------------------------------- To study and understand ----------------------------------------------------------------
+
+-> #pragma omp parallel before while(t < upperLimit) // for(int j = 0; j < steps; j++)
+
+-> is it necessary to parallelise initial generator for N body?
+
+-> is it possible to use collapse for nested loops in evolutionSystem?
+
+-> Calculate execution time needed for calculating energy, disable printing messages
 
 ## Credits
 
