@@ -14,7 +14,7 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 target_link_libraries(solarSystemSimulator PUBLIC Eigen3::Eigen OpenMP::OpenMP_CXX particle_lib manyBody_lib)
-target_compile_options(solarSystemSimulator PRIVATE -O2)
+target_compile_options(solarSystemSimulator PUBLIC -O2)
 
 target_link_libraries(nBodySystemSimulator PUBLIC Eigen3::Eigen OpenMP::OpenMP_CXX particle_lib manyBody_lib)
-target_compile_options(nBodySystemSimulator PRIVATE -O2)
+target_compile_options(nBodySystemSimulator PUBLIC -O2)
