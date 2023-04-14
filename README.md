@@ -1003,12 +1003,12 @@ PC Specs: MacBook Air M1 (8 total cores: 4 performance, 4 "efficiency")
 |                 8|   61.0965|    x2.92|
 |                16|   62.1228|    x2.87|
 
-It is possible to see that the schedule type "guided" has approximately the same performance of the schedule type "static" up to 4 threads, and it becomes better for scaling beyond the 4 threads limit. The better result obtained is the one related to 4 threads, with a speed-up factor of x 3.29. The scaling is quasi-linear up to 4 threads, whereas for more than 4 threads the scaling remains almost the same.
+It is possible to see that the schedule type "guided" has approximately the same performance of the schedule type "static" up to 4 threads, and it becomes better for scaling beyond the 4 threads limit. The better result obtained is the one related to 4 threads, with a speed-up factor of x 3.29. The scaling is quasi-linear up to 4 threads, whereas for more than 4 threads the scaling remains almost the same. See the screenshot obtained under the test folder for the scaling 
 
 ## --> Weak scaling experiment
 
 MacBook Air M1 (8 total cores: 4 performance, 4 "efficiency")
-1024 * numThreadparticles simulated with an integration time of 2 * PI, dt = 0.01 (otherwise the execution time required would be too large), epsilon 0.001, schedule type = guided (most efficient one overall as demonstrated in the strong scaling experiment). The time increment is the ratio timeWithMultipleThreads/timeWithSingleThread. Up to number of threads = 4, the scaling is quasi-linear.
+1024 * numThreadparticles simulated with an integration time of 2 * PI, dt = 0.01 (otherwise the execution time required would be too large), epsilon 0.001, schedule type = guided (most efficient one overall as demonstrated in the strong scaling experiment). The time increment is the ratio timeWithMultipleThreads/timeWithSingleThread. Up to number of threads = 4, the scaling is quasi-linear. See the screenshots obtained under the test folder for the scaling
 
 | `OMP_NUM_THREADS | Num Particles | Time (s) | Time increment |
 |                 1|           1024|   4.76602|              --|
